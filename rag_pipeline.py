@@ -100,7 +100,11 @@ def generate_answer(query, context_docs, conversation_history=None):
     #
     # Then include {history_section} in the prompt string below (already shown).
     # ─────────────────────────────────────────────────────────────────────────
-    history_section = ""  # Week 11: replace with conversation history logic
+    if conversation_history is not None and len(conversation_history) > 0:
+        history_text = conversation_history.get_formatted_history()
+        history_section = f"\nPrevious conversation:\n{history_text}\n"
+    else:
+        history_section = ""
 
     prompt = f"""You are a helpful assistant that answers questions based on the provided context documents.
 
@@ -221,6 +225,9 @@ def run_rag(query, conversation_history=None):
     #   conversation_history.add_message("user", query)
     #   conversation_history.add_message("assistant", answer)
     # ─────────────────────────────────────────────────────────────────────────
+    if conversation_history is not None:
+        conversation_history.add_message("user", query)
+        conversation_history.add_message("assistant", answer)
 
     return {
         "answer": answer,
