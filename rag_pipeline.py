@@ -18,6 +18,7 @@
 
 from google import genai
 from google.genai import types
+import re
 
 from config import (
     GEMINI_API_KEY,
@@ -36,6 +37,57 @@ from filters import filter_by_threshold, has_relevant_results, get_fallback_resp
 from workflow import rewrite_query
 
 _client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Pronouns and vague references common in follow-up questions (e.g. "what does it do?")
+_VAGUE_REFERENCE = re.compile(
+    r"\b(it|its|itself|they|them|their|that|this|those|these)\b",
+    re.IGNORECASE,
+)
+
+
+def _last_user_message(conversation_history):
+    """Return the most recent user message from conversation history."""
+    for msg in reversed(conversation_history.messages):
+        if msg["role"] == "user":
+            return msg["content"]
+    return None
+
+
+def _build_search_query(query, conversation_history):
+    """
+    Build a search query for vector retrieval.
+
+    Follow-ups like "what does it do?" embed poorly on their own. When the
+    question uses a vague reference, prepend the previous user question so
+    retrieval stays on the same topic (e.g. Python).
+    """
+    if conversation_history is None or len(conversation_history) == 0:
+        return query
+
+    if _VAGUE_REFERENCE.search(query):
+        last_user = _last_user_message(conversation_history)
+        if last_user:
+            return f"{last_user} {query}"
+
+    history_text = conversation_history.get_formatted_history()
+    return f"{history_text}\nCurrent question: {query}"
+
+
+def _resolve_question(query, conversation_history):
+    """
+    Clarify what the current question refers to for the LLM prompt.
+
+    Example: "what does it do?" -> "what does it do? (about the topic from: what is python?)"
+    """
+    if conversation_history is None or len(conversation_history) == 0:
+        return query
+
+    if _VAGUE_REFERENCE.search(query):
+        last_user = _last_user_message(conversation_history)
+        if last_user:
+            return f"{query} (about the topic from the previous question: {last_user})"
+
+    return query
 
 
 # ============================================================
@@ -106,14 +158,17 @@ def generate_answer(query, context_docs, conversation_history=None):
     else:
         history_section = ""
 
+    resolved_query = _resolve_question(query, conversation_history)
+
     prompt = f"""You are a helpful assistant that answers questions based on the provided context documents.
 
 Context Documents:
 {context}{history_section}
-Current Question: {query}
+Current Question: {resolved_query}
 
 Instructions:
-- Answer based primarily on the provided context documents
+- If the current question uses a pronoun like "it", use the previous conversation to determine what it refers to
+- Answer based primarily on the provided context documents about that topic
 - If the context doesn't fully answer the question, say so clearly
 - Keep your answer concise and focused
 - Do not make up information that isn't in the context"""
@@ -159,6 +214,17 @@ def run_rag(query, conversation_history=None):
     #         "confidence": 0.0, "grounding": {}, "error": error_message}
     #   3. Clean up the query: query = sanitize_input(query)
     # ─────────────────────────────────────────────────────────────────────────
+    is_valid, error_message = validate_input(query)
+    if not is_valid:
+        return {
+            "answer": error_message,
+            "sources": [],
+            "distances": [],
+            "confidence": 0.0,
+            "grounding": {},
+            "error": error_message,
+        }
+    query = sanitize_input(query)
 
     # ── Week 15 TODO ──────────────────────────────────────────────────────────
     # Rewrite the query before retrieval to improve embedding quality.
@@ -176,7 +242,9 @@ def run_rag(query, conversation_history=None):
     # ─────────────────────────────────────────────────────────────────────────
 
     # ── Week 10: Core Retrieval — already complete ───────────────────────────
-    documents, distances = retrieve_context(query)
+    # Week 11: resolve vague follow-ups (e.g. "what does it do?") using prior turns
+    search_query = _build_search_query(query, conversation_history)
+    documents, distances = retrieve_context(search_query)
 
     # ── Week 14 TODO ──────────────────────────────────────────────────────────
     # Filter out documents that aren't similar enough to be useful.
@@ -211,8 +279,8 @@ def run_rag(query, conversation_history=None):
     #   2. grounding  = check_hallucination(answer, documents)
     #   Then replace the placeholder values below with these variables.
     # ─────────────────────────────────────────────────────────────────────────
-    confidence = 0.0  # Week 13: replace with calculate_confidence(distances)
-    grounding = {}    # Week 13: replace with check_hallucination(answer, documents)
+    confidence = calculate_confidence(distances)
+    grounding = check_hallucination(answer, documents)
 
     # ── Week 11 TODO ──────────────────────────────────────────────────────────
     # Save this exchange to conversation history so follow-up questions work.

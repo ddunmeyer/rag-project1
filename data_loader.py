@@ -23,6 +23,16 @@ SAMPLE_DOCUMENTS = [
     "making HTTP requests, parsing JSON, handling dates, and much more. This 'batteries included' "
     "philosophy means you can build powerful programs without installing many extra packages.",
 
+    "Python was created by Guido van Rossum in the late 1980s while he was working at the Centrum "
+    "Wiskunde & Informatica (CWI) in the Netherlands. He began the project in December 1989 and "
+    "named the language after the British comedy group Monty Python's Flying Circus, not the snake. "
+    "Guido wanted a language that was easy to read, powerful, and fun to use. The first public "
+    "release, Python 0.9.0, came out in February 1991. Python 2.0 was released in 2000 and "
+    "Python 3.0 in 2008, which cleaned up the language while keeping its core philosophy of "
+    "readability and simplicity. Guido van Rossum served as Python's Benevolent Dictator For Life "
+    "(BDFL) until stepping down from that role in 2018; the language is now guided by the Python "
+    "Software Foundation and its community of developers.",
+
     # Machine Learning
     "Machine learning is a branch of artificial intelligence where systems learn from data "
     "instead of being explicitly programmed. A machine learning model finds patterns in training "

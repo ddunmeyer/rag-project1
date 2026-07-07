@@ -16,6 +16,15 @@ import streamlit as st
 from rag_pipeline import initialize_vector_store, run_rag, get_feature_status
 from conversation import ConversationHistory
 
+
+def build_conversation_history(chat_messages):
+    """Build RAG memory from prior chat turns (excludes the current unanswered question)."""
+    history = ConversationHistory()
+    for msg in chat_messages[:-1]:
+        if msg["role"] in ("user", "assistant"):
+            history.add_message(msg["role"], msg["content"])
+    return history
+
 # --- Page Configuration ---
 # This must be the FIRST Streamlit command called in the script.
 st.set_page_config(
@@ -27,9 +36,6 @@ st.set_page_config(
 # --- Initialize Session State ---
 # Streamlit re-runs the entire script on every user interaction (like a button click).
 # "Session state" lets us persist data between re-runs, like a conversation history.
-if "conversation_history" not in st.session_state:
-    st.session_state.conversation_history = ConversationHistory()
-
 if "store_initialized" not in st.session_state:
     st.session_state.store_initialized = False
     st.session_state.doc_count = 0
@@ -54,13 +60,13 @@ with st.sidebar:
 
     st.subheader("System Info")
     st.write(f"Knowledge base: **{st.session_state.doc_count} documents**")
+    st.write(f"Conversation memory: **{len(st.session_state.chat_messages)} stored messages**")
     st.write("Embedding model: **all-MiniLM-L6-v2**")
     st.write("LLM: **gemini-2.5-flash**")
 
     st.divider()
 
     if st.button("Clear Conversation", use_container_width=True):
-        st.session_state.conversation_history.clear()
         st.session_state.chat_messages = []
         st.rerun()
 
@@ -145,10 +151,13 @@ if query:
     # Store the user message for future re-renders
     st.session_state.chat_messages.append({"role": "user", "content": query})
 
+    # Build memory from chat history (the UI list Streamlit already persists reliably)
+    conversation_history = build_conversation_history(st.session_state.chat_messages)
+
     # Run the RAG pipeline and display the response
     with st.chat_message("assistant"):
         with st.spinner("Searching knowledge base and generating answer..."):
-            result = run_rag(query, st.session_state.conversation_history)
+            result = run_rag(query, conversation_history)
 
         # Display error or answer
         if result["error"]:
@@ -198,4 +207,4 @@ if query:
         "grounding": result["grounding"],
     })
 
-    # Note: conversation_history is updated inside run_rag()
+    # Note: conversation history for the next turn comes from chat_messages above

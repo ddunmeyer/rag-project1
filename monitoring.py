@@ -69,7 +69,50 @@ def check_hallucination(answer, context_docs):
     #   6. Return the dict. Wrap everything in try/except — if this call fails,
     #      return: {"verdict": "UNKNOWN", "is_grounded": True, "warning": ""}
     #
-    return {"verdict": "UNKNOWN", "is_grounded": True, "warning": ""}  # placeholder
+    try:
+        context = "\n\n".join(
+            [f"Document {i+1}: {doc}" for i, doc in enumerate(context_docs)]
+        )
+
+        prompt = f"""You are evaluating whether an AI answer is supported by source documents.
+
+Source Documents:
+{context}
+
+Answer to evaluate:
+{answer}
+
+Classify the answer using exactly ONE of these verdicts:
+- GROUNDED: The answer is fully supported by the source documents.
+- PARTIAL: The answer is mostly supported but includes some information beyond the sources.
+- HALLUCINATED: The answer contains significant information not found in the sources.
+
+Respond with exactly one word: GROUNDED, PARTIAL, or HALLUCINATED."""
+
+        response = _client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.0),
+        )
+        verdict = response.text.strip().upper()
+
+        if verdict not in ("GROUNDED", "PARTIAL", "HALLUCINATED"):
+            verdict = "PARTIAL"
+
+        if verdict == "GROUNDED":
+            warning = ""
+        elif verdict == "PARTIAL":
+            warning = "Note: This answer may include some information beyond the provided sources."
+        else:
+            warning = "Warning: This answer may contain information not found in the source documents."
+
+        return {
+            "verdict": verdict,
+            "is_grounded": verdict == "GROUNDED",
+            "warning": warning,
+        }
+    except Exception:
+        return {"verdict": "UNKNOWN", "is_grounded": True, "warning": ""}
 
 
 def calculate_confidence(distances):
@@ -103,4 +146,8 @@ def calculate_confidence(distances):
     #   3. Apply the formula above
     #   4. Return the result rounded to 2 decimal places: round(confidence, 2)
     #
-    return 0.0  # placeholder — replace with your implementation
+    if not distances:
+        return 0.0
+    avg_distance = sum(distances) / len(distances)
+    confidence = max(0.0, 1.0 - (avg_distance / 2.0))
+    return round(confidence, 2)
