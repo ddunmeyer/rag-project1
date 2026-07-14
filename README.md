@@ -106,7 +106,7 @@ Update this checklist as you complete each week's assignment.
 - [x] Week 11 — Implemented conversation context
 - [x] Week 12 — Implemented input security
 - [x] Week 13 — Implemented hallucination monitoring
-- [ ] Week 14 — Implemented filtering and fallbacks
+- [x] Week 14 — Implemented filtering and fallbacks
 - [ ] Week 15 — Implemented multi-step AI workflows
 
 ---
@@ -183,73 +183,6 @@ Without your implementation, the second answer will be generic. With it, the ans
 
 ### ✅ When done
 Check off **Week 11** in the Weekly Progress section above, then delete this entire Week 11 assignment section.
-
----
-
----
-## Assignment: Week 13 — Monitoring and Detecting Hallucinations
-
-**Learning objective:** Understand what hallucination is and how to detect it using LLM-as-judge.
-
-### Background
-
-Even when we give an LLM context documents, it sometimes generates information that goes *beyond* what those documents say. It "fills in the gaps" with plausible-sounding but unverified facts. This is called **hallucination**.
-
-How do we catch it? We use a technique called **LLM-as-judge**: after generating the answer, we make a second LLM call asking Gemini to compare the answer against the source documents and classify it as GROUNDED, PARTIAL, or HALLUCINATED. We also compute a **confidence score** from the vector distances — documents that were very close to the query in embedding space give us more confidence in the answer.
-
-### What to implement
-
-**File 1 — `monitoring.py`**
-
-Implement both functions. Read the TODO comments carefully — they explain the RAG concepts:
-- `check_hallucination()`: Build the LLM-as-judge prompt. Use `temperature=0.0` — you want a precise classification, not a creative response.
-- `calculate_confidence()`: Convert ChromaDB L2 distances to a 0–1 score using the formula in the comment.
-
-**File 2 — `rag_pipeline.py`**
-
-Find the **Week 13 TODO** block in `run_rag()`. Replace the two placeholder lines with your calls to `calculate_confidence()` and `check_hallucination()`.
-
-### How to test
-
-Run the app and look for the **Confidence** and **Grounding** indicators that appear below each answer. Ask an on-topic question (should be GROUNDED, high confidence) and notice how the scores change.
-
-### ✅ When done
-Check off **Week 13** in the Weekly Progress section above, then delete this entire Week 13 assignment section.
-
----
-
----
-## Assignment: Week 14 — Filtering, Fallbacks, and Graceful Failure
-
-**Learning objective:** Understand similarity thresholds and why production RAG systems need graceful degradation.
-
-### Background
-
-ChromaDB always returns results — even when no document is actually relevant to the query. Ask the app *"What is the best pizza topping?"* and it will still return the 3 "most similar" tech documents and attempt to generate an answer from them. Without filtering, you get hallucinated nonsense.
-
-The solution: **similarity thresholds**. We only keep documents where the vector distance is below a cutoff. Documents that are too far away from the query get dropped. When nothing passes the filter, we **degrade gracefully** — return a helpful message rather than crashing or hallucinating.
-
-### What to implement
-
-**File 1 — `filters.py`**
-
-Implement `filter_by_threshold()` and `get_fallback_response()`. The first is the core filtering logic (read the TODO). The second is just a well-written, helpful message — but think about what a user actually needs to know when their question can't be answered.
-
-**File 2 — `rag_pipeline.py`**
-
-Find the **Week 14 TODO** block in `run_rag()`. Add the filter step after retrieval. If `has_relevant_results()` returns False, return the fallback dict immediately.
-
-Then wrap the `generate_answer()` call in a `try/except Exception as e:` block and call `handle_api_error(e)` in the except branch to return a user-friendly error dict.
-
-### How to test
-
-Ask a completely off-topic question:
-- *"Who won the Super Bowl this year?"*
-
-Before your implementation: the app tries to answer from irrelevant docs. After: it returns your fallback message.
-
-### ✅ When done
-Check off **Week 14** in the Weekly Progress section above, then delete this entire Week 14 assignment section.
 
 ---
 
