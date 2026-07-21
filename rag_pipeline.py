@@ -240,10 +240,14 @@ def run_rag(query, conversation_history=None):
     #            history_context = conversation_history.get_formatted_history()
     #   2. Rewrite: query = rewrite_query(query, history_context)
     # ─────────────────────────────────────────────────────────────────────────
+    history_context = ""
+    if conversation_history and len(conversation_history) > 0:
+        history_context = conversation_history.get_formatted_history()
+    retrieval_query = rewrite_query(query, history_context)
 
     # ── Week 10: Core Retrieval — already complete ───────────────────────────
     # Week 11: resolve vague follow-ups (e.g. "what does it do?") using prior turns
-    search_query = _build_search_query(query, conversation_history)
+    search_query = _build_search_query(retrieval_query, conversation_history)
     documents, distances = retrieve_context(search_query)
 
     # ── Week 14 TODO ──────────────────────────────────────────────────────────
@@ -340,6 +344,8 @@ def get_feature_status():
     from security import BLOCKED_PATTERNS
     from monitoring import calculate_confidence
     from filters import filter_by_threshold
+    from workflow import rewrite_query
+    import inspect
 
     # Week 11: does get_formatted_history() produce real output?
     _h = ConversationHistory()
@@ -356,8 +362,8 @@ def get_feature_status():
     _filtered, _ = filter_by_threshold(["a", "b"], [0.3, 1.5], threshold=1.0)
     week14 = len(_filtered) == 1
 
-    # Week 15: hard to auto-detect without an API call — check manually
-    week15 = None  # None = "check manually"
+    # Week 15: is rewrite_query implemented (not still a placeholder)?
+    week15 = "placeholder" not in inspect.getsource(rewrite_query)
 
     return {
         "Week 11 — Conversation context": week11,

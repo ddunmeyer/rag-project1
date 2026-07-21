@@ -61,7 +61,32 @@ def rewrite_query(original_query, conversation_context=""):
     #   4. Return response.text.strip() if it's not empty and under 500 chars
     #   5. Wrap in try/except — if anything fails, return original_query unchanged
     #
-    return original_query  # placeholder — query passes through unchanged
+    try:
+        context_section = ""
+        if conversation_context:
+            context_section = f"\nPrevious conversation:\n{conversation_context}\n"
+
+        prompt = f"""Rewrite the following user question into a clearer, more specific question suitable for semantic search over a technical knowledge base about Python, machine learning, databases, APIs, and AI concepts.
+{context_section}
+Original question: {original_query}
+
+Instructions:
+- Resolve vague pronouns like "it", "that", or "they" using conversation context when available
+- Make the question specific and use technical vocabulary where appropriate
+- Return ONLY the rewritten question, nothing else
+- Keep it under 500 characters"""
+
+        response = _client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.1),
+        )
+        rewritten = response.text.strip()
+        if rewritten and len(rewritten) < 500:
+            return rewritten
+        return original_query
+    except Exception:
+        return original_query
 
 
 def decompose_query(query):
@@ -92,7 +117,29 @@ def decompose_query(query):
     #   4. Return at most 3 sub-questions
     #   5. Wrap in try/except — if anything fails, return [query]
     #
-    return [query]  # placeholder — query is not decomposed
+    try:
+        prompt = f"""Analyze this question. If it covers multiple distinct topics, split it into 2-3 simpler sub-questions (one per line). If it is already a single simple question, return it unchanged on one line.
+
+Question: {query}
+
+Return only the sub-questions, one per line, with no numbering or bullets."""
+
+        response = _client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.1),
+        )
+        lines = [line.strip() for line in response.text.strip().split("\n")]
+        sub_questions = []
+        for line in lines:
+            cleaned = line.lstrip("0123456789.-) ")
+            if len(cleaned) > 10:
+                sub_questions.append(cleaned)
+        if not sub_questions:
+            return [query]
+        return sub_questions[:3]
+    except Exception:
+        return [query]
 
 
 def multi_hop_retrieve(query, n_per_hop=2):

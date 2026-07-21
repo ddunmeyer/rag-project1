@@ -33,6 +33,19 @@ SAMPLE_DOCUMENTS = [
     "(BDFL) until stepping down from that role in 2018; the language is now guided by the Python "
     "Software Foundation and its community of developers.",
 
+    "Anaconda is an open-source distribution of Python designed for data science, machine learning, "
+    "and AI development. While Python is a programming language, Anaconda is a curated platform that "
+    "bundles Python with tools for package management, environment management, and reproducible "
+    "workflows. It was co-founded by Peter Wang and Travis Oliphant to make data science easier to "
+    "set up and deploy at scale.",
+
+    "Anaconda Distribution includes Python, Conda (a cross-platform package and environment manager), "
+    "and Anaconda Navigator (a desktop GUI for managing environments and launching tools like Jupyter "
+    "Notebooks and Spyder). It comes pre-installed with hundreds of popular data science libraries "
+    "such as NumPy, pandas, Matplotlib, SciPy, and scikit-learn, so users can start analyzing data "
+    "without manually installing dependencies. Miniconda is a smaller alternative that includes only "
+    "Conda, Python, and essential packages — users can add more packages later with conda install.",
+
     # Machine Learning
     "Machine learning is a branch of artificial intelligence where systems learn from data "
     "instead of being explicitly programmed. A machine learning model finds patterns in training "
