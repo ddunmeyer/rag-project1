@@ -95,6 +95,17 @@ The app opens in your browser at `http://localhost:8501`.
 | `monitoring.py` | Hallucination detection (Week 13) |
 | `filters.py` | Similarity filtering and fallbacks (Week 14) |
 | `workflow.py` | Query rewriting and multi-hop retrieval (Week 15) |
+| `langchain_demo.py` | Optional Week 15.5 LangChain demo (same RAG flow using LangChain) |
+| `LANGCHAIN.md` | LangChain concept mapping and setup guide |
+
+### Optional: Week 15.5 LangChain demo
+
+```bash
+pip install -r requirements-langchain.txt
+python langchain_demo.py
+```
+
+See [LANGCHAIN.md](LANGCHAIN.md) for how this maps to your manual implementation.
 
 ---
 
