@@ -14,8 +14,8 @@
 # production RAG systems.
 
 from google import genai
-from google.genai import types
 from config import GEMINI_API_KEY, GEMINI_MODEL
+from gemini_utils import call_gemini
 
 _client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -89,10 +89,11 @@ Classify the answer using exactly ONE of these verdicts:
 
 Respond with exactly one word: GROUNDED, PARTIAL, or HALLUCINATED."""
 
-        response = _client.models.generate_content(
+        response = call_gemini(
+            _client,
             model=GEMINI_MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.0),
+            temperature=0.0,
         )
         verdict = response.text.strip().upper()
 

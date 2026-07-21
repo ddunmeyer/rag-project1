@@ -18,8 +18,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # --- Model Settings ---
 # The name of the AI model we use for generating answers.
-# gemini-2.5-flash is fast, capable, and available on the free tier.
-GEMINI_MODEL = "gemini-2.5-flash"
+# gemini-3.5-flash-lite is fast, cost-efficient, and works well on the free tier.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 # The name of the embedding model we use to turn text into numbers.
 # "all-MiniLM-L6-v2" is small, fast, and works well for semantic search.
@@ -48,3 +48,22 @@ TEMPERATURE = 0.2
 # How many recent messages to include in the conversation history.
 # Keeping only the last 10 turns prevents the context from growing too large.
 MAX_HISTORY_TURNS = 10
+
+# --- API Usage Settings ---
+# The free Gemini tier allows very few requests per minute/day.
+# Each question can use up to 3 API calls (rewrite + answer + hallucination check).
+# These settings reduce calls so the app stays usable on the free tier.
+def _env_bool(name, default):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+# Only rewrite vague follow-up questions (saves 1 API call on clear first questions).
+ENABLE_QUERY_REWRITING = _env_bool("ENABLE_QUERY_REWRITING", True)
+
+# LLM-as-judge adds 1 extra API call per answer. Off by default on free tier.
+ENABLE_HALLUCINATION_CHECK = _env_bool("ENABLE_HALLUCINATION_CHECK", False)
+
+# Retry Gemini calls when rate-limited instead of failing immediately.
+GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "3"))

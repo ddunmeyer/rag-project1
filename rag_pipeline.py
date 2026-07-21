@@ -17,7 +17,6 @@
 #   Week 15: Add query rewriting         → integrate workflow.py
 
 from google import genai
-from google.genai import types
 import re
 
 from config import (
@@ -26,6 +25,8 @@ from config import (
     TOP_K_RESULTS,
     TEMPERATURE,
     SIMILARITY_THRESHOLD,
+    ENABLE_QUERY_REWRITING,
+    ENABLE_HALLUCINATION_CHECK,
 )
 from embeddings import embed_text, embed_documents
 from vector_store import add_documents, query_similar
@@ -35,6 +36,7 @@ from security import validate_input, sanitize_input
 from monitoring import check_hallucination, calculate_confidence
 from filters import filter_by_threshold, has_relevant_results, get_fallback_response, handle_api_error
 from workflow import rewrite_query
+from gemini_utils import call_gemini
 
 _client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -88,6 +90,13 @@ def _resolve_question(query, conversation_history):
             return f"{query} (about the topic from the previous question: {last_user})"
 
     return query
+
+
+def _needs_query_rewrite(query, conversation_history):
+    """Only spend an extra API call when the query is vague or a follow-up."""
+    if conversation_history is not None and len(conversation_history) > 0:
+        return True
+    return bool(_VAGUE_REFERENCE.search(query))
 
 
 # ============================================================
@@ -173,10 +182,11 @@ Instructions:
 - Keep your answer concise and focused
 - Do not make up information that isn't in the context"""
 
-    response = _client.models.generate_content(
+    response = call_gemini(
+        _client,
         model=GEMINI_MODEL,
         contents=prompt,
-        config=types.GenerateContentConfig(temperature=TEMPERATURE),
+        temperature=TEMPERATURE,
     )
     return response.text
 
@@ -243,7 +253,10 @@ def run_rag(query, conversation_history=None):
     history_context = ""
     if conversation_history and len(conversation_history) > 0:
         history_context = conversation_history.get_formatted_history()
-    retrieval_query = rewrite_query(query, history_context)
+    if ENABLE_QUERY_REWRITING and _needs_query_rewrite(query, conversation_history):
+        retrieval_query = rewrite_query(query, history_context)
+    else:
+        retrieval_query = query
 
     # ── Week 10: Core Retrieval — already complete ───────────────────────────
     # Week 11: resolve vague follow-ups (e.g. "what does it do?") using prior turns
@@ -305,7 +318,10 @@ def run_rag(query, conversation_history=None):
     #   Then replace the placeholder values below with these variables.
     # ─────────────────────────────────────────────────────────────────────────
     confidence = calculate_confidence(distances)
-    grounding = check_hallucination(answer, documents)
+    if ENABLE_HALLUCINATION_CHECK:
+        grounding = check_hallucination(answer, documents)
+    else:
+        grounding = {"verdict": "SKIPPED", "is_grounded": True, "warning": ""}
 
     # ── Week 11 TODO ──────────────────────────────────────────────────────────
     # Save this exchange to conversation history so follow-up questions work.

@@ -15,6 +15,7 @@
 import streamlit as st
 from rag_pipeline import initialize_vector_store, run_rag, get_feature_status
 from conversation import ConversationHistory
+from config import GEMINI_MODEL
 
 
 def build_conversation_history(chat_messages):
@@ -62,7 +63,7 @@ with st.sidebar:
     st.write(f"Knowledge base: **{st.session_state.doc_count} documents**")
     st.write(f"Conversation memory: **{len(st.session_state.chat_messages)} stored messages**")
     st.write("Embedding model: **all-MiniLM-L6-v2**")
-    st.write("LLM: **gemini-2.5-flash**")
+    st.write(f"LLM: **{GEMINI_MODEL}**")
 
     st.divider()
 

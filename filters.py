@@ -103,7 +103,10 @@ def handle_api_error(error):
     if "rate limit" in error_str or "quota" in error_str or "resource_exhausted" in error_str:
         return (
             "The AI service is temporarily unavailable due to rate limits. "
-            "Please wait a moment and try again."
+            "Please wait 30–60 seconds and try again. "
+            "On the free tier, avoid rapid follow-up questions. "
+            "You can also set ENABLE_HALLUCINATION_CHECK=false in your .env file "
+            "to reduce API usage."
         )
     elif "api key" in error_str or "authentication" in error_str or "invalid_api_key" in error_str:
         return (

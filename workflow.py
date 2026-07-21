@@ -20,8 +20,8 @@
 #    This is called "multi-hop retrieval."
 
 from google import genai
-from google.genai import types
 from config import GEMINI_API_KEY, GEMINI_MODEL
+from gemini_utils import call_gemini
 from embeddings import embed_text
 from vector_store import query_similar
 
@@ -76,10 +76,11 @@ Instructions:
 - Return ONLY the rewritten question, nothing else
 - Keep it under 500 characters"""
 
-        response = _client.models.generate_content(
+        response = call_gemini(
+            _client,
             model=GEMINI_MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.1),
+            temperature=0.1,
         )
         rewritten = response.text.strip()
         if rewritten and len(rewritten) < 500:
@@ -124,10 +125,11 @@ Question: {query}
 
 Return only the sub-questions, one per line, with no numbering or bullets."""
 
-        response = _client.models.generate_content(
+        response = call_gemini(
+            _client,
             model=GEMINI_MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.1),
+            temperature=0.1,
         )
         lines = [line.strip() for line in response.text.strip().split("\n")]
         sub_questions = []
