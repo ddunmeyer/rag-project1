@@ -8,6 +8,12 @@ You can ask this app questions about Python, machine learning, databases, APIs, 
 
 ## System Architecture
 
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full Week 16 diagram and component explanations.
+
+![Architecture Diagram](docs/rag-app-architecture-diagram.png)
+
+**Quick reference — query flow:**
+
 ```
 User Query
     │
@@ -97,6 +103,8 @@ The app opens in your browser at `http://localhost:8501`.
 | `workflow.py` | Query rewriting and multi-hop retrieval (Week 15) |
 | `langchain_demo.py` | Optional Week 15.5 LangChain demo (same RAG flow using LangChain) |
 | `LANGCHAIN.md` | LangChain concept mapping and setup guide |
+| `ARCHITECTURE.md` | High-level architecture diagram and explanation (Week 16) |
+| `docs/` | Architecture diagram PNG and editable Excalidraw file |
 
 ### Optional: Week 15.5 LangChain demo
 
@@ -119,6 +127,7 @@ Update this checklist as you complete each week's assignment.
 - [x] Week 13 — Implemented hallucination monitoring
 - [x] Week 14 — Implemented filtering and fallbacks
 - [x] Week 15 — Implemented multi-step AI workflows
+- [x] Week 16 — Created architecture diagram and explanation
 
 ---
 
