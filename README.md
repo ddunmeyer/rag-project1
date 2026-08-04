@@ -97,7 +97,7 @@ The app opens in your browser at `http://localhost:8501`.
 | `data_loader.py` | Sample tech documents |
 | `rag_pipeline.py` | Central orchestration — ties everything together |
 | `conversation.py` | Conversation history (Week 11) |
-| `security.py` | Input validation and security (Week 12) |
+| `security.py` | Input validation, injection defense, and data protection (Weeks 12 & 17) |
 | `monitoring.py` | Hallucination detection (Week 13) |
 | `filters.py` | Similarity filtering and fallbacks (Week 14) |
 | `workflow.py` | Query rewriting and multi-hop retrieval (Week 15) |

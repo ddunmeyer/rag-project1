@@ -27,6 +27,8 @@ from config import (
     SIMILARITY_THRESHOLD,
     ENABLE_QUERY_REWRITING,
     ENABLE_HALLUCINATION_CHECK,
+    ENABLE_SENSITIVE_DATA_CHECKS,
+    ENABLE_RESTRICTED_TOPIC_CHECKS,
 )
 from embeddings import embed_text, embed_documents
 from vector_store import add_documents, query_similar
@@ -224,7 +226,11 @@ def run_rag(query, conversation_history=None):
     #         "confidence": 0.0, "grounding": {}, "error": error_message}
     #   3. Clean up the query: query = sanitize_input(query)
     # ─────────────────────────────────────────────────────────────────────────
-    is_valid, error_message = validate_input(query)
+    is_valid, error_message = validate_input(
+        query,
+        check_sensitive_data=ENABLE_SENSITIVE_DATA_CHECKS,
+        check_restricted_topics=ENABLE_RESTRICTED_TOPIC_CHECKS,
+    )
     if not is_valid:
         return {
             "answer": error_message,
@@ -357,10 +363,10 @@ def get_feature_status():
     sidebar in app.py to show a live progress panel.
     """
     from conversation import ConversationHistory
-    from security import BLOCKED_PATTERNS
     from monitoring import calculate_confidence
     from filters import filter_by_threshold
     from workflow import rewrite_query
+    from security import BLOCKED_PATTERNS, validate_input
     import inspect
 
     # Week 11: does get_formatted_history() produce real output?
@@ -368,8 +374,11 @@ def get_feature_status():
     _h.messages = [{"role": "user", "content": "test"}]
     week11 = _h.get_formatted_history() != ""
 
-    # Week 12: are any injection patterns defined?
-    week12 = len(BLOCKED_PATTERNS) > 0
+    # Week 12: injection patterns + sensitive-data checks in security.py
+    week12 = (
+        len(BLOCKED_PATTERNS) > 0
+        and validate_input("contact me at test@example.com", check_injection=False)[0] is False
+    )
 
     # Week 13: does calculate_confidence() return a non-zero value?
     week13 = calculate_confidence([0.5]) != 0.0
@@ -381,10 +390,14 @@ def get_feature_status():
     # Week 15: is rewrite_query implemented (not still a placeholder)?
     week15 = "placeholder" not in inspect.getsource(rewrite_query)
 
+    # Week 17: data-protection checks live in the unified security module
+    week17 = validate_input("contact me at test@example.com", check_injection=False)[0] is False
+
     return {
         "Week 11 — Conversation context": week11,
         "Week 12 — Input security": week12,
         "Week 13 — Hallucination monitoring": week13,
         "Week 14 — Filtering & fallbacks": week14,
         "Week 15 — Query rewriting": week15,
+        "Week 17 — Data protection": week17,
     }

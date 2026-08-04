@@ -16,6 +16,7 @@ import streamlit as st
 from rag_pipeline import initialize_vector_store, run_rag, get_feature_status
 from conversation import ConversationHistory
 from config import GEMINI_MODEL
+from security import get_security_notice
 
 
 def build_conversation_history(chat_messages):
@@ -96,6 +97,9 @@ with st.sidebar:
         else:
             # None = can't auto-detect, prompt manual check
             st.info(f"🔲 {feature} — verify manually", icon=None)
+
+    st.divider()
+    st.caption(get_security_notice())
 
 # --- Main Content ---
 st.title("RAG Learning App")

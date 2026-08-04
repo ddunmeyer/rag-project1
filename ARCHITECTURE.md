@@ -15,7 +15,7 @@ High-level architecture diagram for the RAG Learning App (Week 16).
 | **User (Browser)** | Sends questions; reads answers, sources, and confidence. |
 | **Streamlit UI (`app.py`)** | Chat interface, session state, sidebar status panel. |
 | **RAG Pipeline (`rag_pipeline.py`)** | Orchestrates startup indexing and every query via `run_rag()`. |
-| **`security.py`** | Validates input; blocks injection; sanitizes text. |
+| **`security.py`** | Validates input; blocks injection & sensitive data; sanitizes text. |
 | **`conversation.py`** | Keeps chat history for follow-up questions. |
 | **`workflow.py`** | Rewrites vague or follow-up queries before retrieval. |
 | **`embeddings.py`** | Turns text into vectors (SentenceTransformers). |
@@ -74,7 +74,7 @@ All query steps are orchestrated by **`rag_pipeline.py`** via `run_rag()`:
 
 | Step | File | Role |
 |------|------|------|
-| 1. Security | `security.py` | Block prompt-injection patterns; sanitize input |
+| 1. Security | `security.py` | Injection defense, PII/secret checks, sanitize input |
 | 2. Memory | `conversation.py` | Include prior chat turns for follow-up questions |
 | 3. Query rewrite | `workflow.py` | Rewrite vague/follow-up queries before retrieval (optional) |
 | 4. Embed query | `embeddings.py` | Turn the search query into a vector |

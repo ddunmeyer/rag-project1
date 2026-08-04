@@ -67,3 +67,9 @@ ENABLE_HALLUCINATION_CHECK = _env_bool("ENABLE_HALLUCINATION_CHECK", False)
 
 # Retry Gemini calls when rate-limited instead of failing immediately.
 GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "3"))
+
+# Block queries with PII or secrets before they reach Gemini.
+ENABLE_SENSITIVE_DATA_CHECKS = _env_bool("ENABLE_SENSITIVE_DATA_CHECKS", True)
+
+# Optional topic guardrails (medical advice requests, etc.).
+ENABLE_RESTRICTED_TOPIC_CHECKS = _env_bool("ENABLE_RESTRICTED_TOPIC_CHECKS", False)
