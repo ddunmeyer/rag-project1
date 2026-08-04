@@ -4,7 +4,31 @@ High-level architecture diagram for the RAG Learning App (Week 16).
 
 ![Architecture Diagram](docs/rag-app-architecture-diagram.png)
 
-**Editable source:** [docs/rag-app-architecture-diagram.excalidraw](docs/rag-app-architecture-diagram.excalidraw) — open at [excalidraw.com](https://excalidraw.com) to edit and re-export.
+**Editable source:** [docs/rag-app-architecture-diagram.excalidraw](docs/rag-app-architecture-diagram.excalidraw) — open at [excalidraw.com](https://excalidraw.com) (Arial/Helvetica font, captions on each node).
+
+---
+
+## Node guide (brief)
+
+| Node | What it does |
+|------|----------------|
+| **User (Browser)** | Sends questions; reads answers, sources, and confidence. |
+| **Streamlit UI (`app.py`)** | Chat interface, session state, sidebar status panel. |
+| **RAG Pipeline (`rag_pipeline.py`)** | Orchestrates startup indexing and every query via `run_rag()`. |
+| **`security.py`** | Validates input; blocks injection; sanitizes text. |
+| **`conversation.py`** | Keeps chat history for follow-up questions. |
+| **`workflow.py`** | Rewrites vague or follow-up queries before retrieval. |
+| **`embeddings.py`** | Turns text into vectors (SentenceTransformers). |
+| **`vector_store.py`** | Searches ChromaDB for similar documents. |
+| **`filters.py`** | Removes weak matches; fallback when nothing is relevant. |
+| **`gemini_utils.py`** | Calls Gemini with automatic retry on rate limits. |
+| **`generate_answer()`** | Builds prompt with docs + history; requests LLM answer. |
+| **`monitoring.py`** | Confidence score; optional hallucination grounding check. |
+| **`data_loader.py`** | Loads source documents into the knowledge base. |
+| **ChromaDB** | Local vector database for embedded document chunks. |
+| **Google Gemini API** | Generates answers from retrieved context. |
+| **`config.py` / `.env`** | Model settings, thresholds, API keys, feature flags. |
+| **`langchain_demo.py`** | Optional LCEL chain + ReAct agent comparison demo. |
 
 ---
 
