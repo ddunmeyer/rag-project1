@@ -15,7 +15,7 @@
 import streamlit as st
 from rag_pipeline import initialize_vector_store, run_rag, get_feature_status
 from conversation import ConversationHistory
-from config import GEMINI_MODEL
+from config import GEMINI_MODEL, RAG_MODE
 from security import get_security_notice
 
 
@@ -65,6 +65,7 @@ with st.sidebar:
     st.write(f"Conversation memory: **{len(st.session_state.chat_messages)} stored messages**")
     st.write("Embedding model: **all-MiniLM-L6-v2**")
     st.write(f"LLM: **{GEMINI_MODEL}**")
+    st.write(f"Pipeline: **LangChain ({RAG_MODE})**")
 
     st.divider()
 
@@ -76,10 +77,10 @@ with st.sidebar:
 
     st.subheader("How It Works")
     st.markdown("""
-    1. Your question is **embedded** (converted to a vector)
-    2. Similar vectors are found in **ChromaDB**
-    3. Relevant documents are sent to **Gemini** as context
-    4. Gemini generates an answer grounded in those documents
+    1. Your question is validated by **security checks**
+    2. **LangChain** embeds the query and searches **ChromaDB**
+    3. Retrieved docs are filtered and sent to **Gemini**
+    4. Optional monitoring checks confidence and grounding
     """)
 
     st.divider()

@@ -96,24 +96,33 @@ The app opens in your browser at `http://localhost:8501`.
 | `vector_store.py` | Store and search vectors with ChromaDB |
 | `data_loader.py` | Sample tech documents |
 | `rag_pipeline.py` | Central orchestration — ties everything together |
+| `langchain_engine.py` | LangChain engine (Chroma, embeddings, Gemini, LCEL / ReAct) |
 | `conversation.py` | Conversation history (Week 11) |
 | `security.py` | Input validation, injection defense, and data protection (Weeks 12 & 17) |
 | `monitoring.py` | Hallucination detection (Week 13) |
 | `filters.py` | Similarity filtering and fallbacks (Week 14) |
 | `workflow.py` | Query rewriting and multi-hop retrieval (Week 15) |
-| `langchain_demo.py` | Optional Week 15.5 LangChain demo (same RAG flow using LangChain) |
-| `LANGCHAIN.md` | LangChain concept mapping and setup guide |
+| `langchain_demo.py` | CLI test runner for the LangChain-backed `run_rag()` |
+| `LANGCHAIN.md` | LangChain architecture and configuration |
 | `ARCHITECTURE.md` | High-level architecture diagram and explanation (Week 16) |
 | `docs/` | Architecture diagram PNG and editable Excalidraw file |
 
-### Optional: Week 15.5 LangChain demo
+### LangChain pipeline
+
+LangChain powers the main app (`langchain_engine.py` + `rag_pipeline.py`).
 
 ```bash
-pip install -r requirements-langchain.txt
-python langchain_demo.py
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-See [LANGCHAIN.md](LANGCHAIN.md) for how this maps to your manual implementation.
+Optional CLI test:
+
+```bash
+python langchain_demo.py "What is Python?"
+```
+
+Set `RAG_MODE=react` in `.env` for the ReAct agent. See [LANGCHAIN.md](LANGCHAIN.md).
 
 ---
 

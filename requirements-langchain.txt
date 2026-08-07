@@ -1,7 +1,2 @@
-# Optional — Week 15.5 LangChain demo (does not replace the main app)
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-google-genai>=2.0.0
-langchain-chroma>=0.2.0
-langchain-huggingface>=0.1.0
-langgraph>=0.2.0
+# Merged into requirements.txt — LangChain is part of the main app.
+-r requirements.txt

@@ -73,3 +73,8 @@ ENABLE_SENSITIVE_DATA_CHECKS = _env_bool("ENABLE_SENSITIVE_DATA_CHECKS", True)
 
 # Optional topic guardrails (medical advice requests, etc.).
 ENABLE_RESTRICTED_TOPIC_CHECKS = _env_bool("ENABLE_RESTRICTED_TOPIC_CHECKS", False)
+
+# --- LangChain Pipeline ---
+# RAG_MODE: "chain" (retrieve + LCEL) or "react" (LangGraph agent with tools)
+RAG_MODE = os.getenv("RAG_MODE", "chain").strip().lower()
+CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")

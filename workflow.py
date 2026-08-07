@@ -19,13 +19,7 @@
 #    Split them up and retrieve separately, then combine the results.
 #    This is called "multi-hop retrieval."
 
-from google import genai
-from config import GEMINI_API_KEY, GEMINI_MODEL
-from gemini_utils import call_gemini
-from embeddings import embed_text
-from vector_store import query_similar
-
-_client = genai.Client(api_key=GEMINI_API_KEY)
+from langchain_engine import invoke_llm_text, retrieve_with_scores
 
 
 def rewrite_query(original_query, conversation_context=""):
@@ -76,13 +70,7 @@ Instructions:
 - Return ONLY the rewritten question, nothing else
 - Keep it under 500 characters"""
 
-        response = call_gemini(
-            _client,
-            model=GEMINI_MODEL,
-            contents=prompt,
-            temperature=0.1,
-        )
-        rewritten = response.text.strip()
+        rewritten = invoke_llm_text(prompt, temperature=0.1)
         if rewritten and len(rewritten) < 500:
             return rewritten
         return original_query
@@ -125,13 +113,8 @@ Question: {query}
 
 Return only the sub-questions, one per line, with no numbering or bullets."""
 
-        response = call_gemini(
-            _client,
-            model=GEMINI_MODEL,
-            contents=prompt,
-            temperature=0.1,
-        )
-        lines = [line.strip() for line in response.text.strip().split("\n")]
+        raw = invoke_llm_text(prompt, temperature=0.1)
+        lines = [line.strip() for line in raw.strip().split("\n")]
         sub_questions = []
         for line in lines:
             cleaned = line.lstrip("0123456789.-) ")
@@ -166,10 +149,9 @@ def multi_hop_retrieve(query, n_per_hop=2):
     seen_documents = set()
 
     for sub_query in sub_queries:
-        embedding = embed_text(sub_query)
-        results = query_similar(embedding, n_per_hop)
+        docs, _ = retrieve_with_scores(sub_query, k=n_per_hop)
 
-        for doc in results["documents"][0]:
+        for doc in docs:
             if doc not in seen_documents:
                 seen_documents.add(doc)
                 all_documents.append(doc)

@@ -13,11 +13,7 @@
 # is actually supported by the context. This is a common pattern in
 # production RAG systems.
 
-from google import genai
-from config import GEMINI_API_KEY, GEMINI_MODEL
-from gemini_utils import call_gemini
-
-_client = genai.Client(api_key=GEMINI_API_KEY)
+from langchain_engine import invoke_llm_text
 
 
 def check_hallucination(answer, context_docs):
@@ -89,13 +85,7 @@ Classify the answer using exactly ONE of these verdicts:
 
 Respond with exactly one word: GROUNDED, PARTIAL, or HALLUCINATED."""
 
-        response = call_gemini(
-            _client,
-            model=GEMINI_MODEL,
-            contents=prompt,
-            temperature=0.0,
-        )
-        verdict = response.text.strip().upper()
+        verdict = invoke_llm_text(prompt, temperature=0.0).strip().upper()
 
         if verdict not in ("GROUNDED", "PARTIAL", "HALLUCINATED"):
             verdict = "PARTIAL"
