@@ -17,6 +17,7 @@ from rag_pipeline import initialize_vector_store, run_rag, get_feature_status
 from conversation import ConversationHistory
 from config import GEMINI_MODEL, RAG_MODE
 from security import get_security_notice
+from compliance import get_compliance_notice
 
 
 def build_conversation_history(chat_messages):
@@ -101,6 +102,7 @@ with st.sidebar:
 
     st.divider()
     st.caption(get_security_notice())
+    st.caption(get_compliance_notice())
 
 # --- Main Content ---
 st.title("RAG Learning App")
@@ -144,6 +146,11 @@ for message in st.session_state.chat_messages:
             warning = grounding.get("warning", "")
             if warning:
                 st.warning(warning)
+
+            compliance = message.get("compliance", {})
+            if compliance:
+                with st.expander("Compliance metadata"):
+                    st.json(compliance)
 
 # --- Query Input ---
 # st.chat_input shows a text box pinned to the bottom of the page
@@ -203,6 +210,11 @@ if query:
             if warning:
                 st.warning(warning)
 
+        compliance = result.get("compliance", {})
+        if compliance and not result["error"]:
+            with st.expander("Compliance metadata"):
+                st.json(compliance)
+
     # Store the assistant message for future re-renders
     st.session_state.chat_messages.append({
         "role": "assistant",
@@ -211,6 +223,7 @@ if query:
         "distances": result["distances"],
         "confidence": result["confidence"],
         "grounding": result["grounding"],
+        "compliance": result.get("compliance", {}),
     })
 
     # Note: conversation history for the next turn comes from chat_messages above

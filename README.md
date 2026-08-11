@@ -1,6 +1,6 @@
 # RAG Learning App
 
-A Retrieval-Augmented Generation (RAG) application built with Python, ChromaDB, SentenceTransformers, and Google Gemini. You'll build this incrementally over Weeks 10–17.
+A Retrieval-Augmented Generation (RAG) application built with Python, ChromaDB, SentenceTransformers, and Google Gemini. You'll build this incrementally over Weeks 10–18.
 
 ## What This App Does
 
@@ -19,6 +19,9 @@ User Query
     │
     ▼
 [security.py]      ← Validate and sanitize input (Week 12)
+    │
+    ▼
+[compliance.py]    ← Tag metadata and redact sensitive data (Week 18)
     │
     ▼
 [workflow.py]      ← Rewrite query for better retrieval (Week 15)
@@ -99,6 +102,7 @@ The app opens in your browser at `http://localhost:8501`.
 | `langchain_engine.py` | LangChain engine (Chroma, embeddings, Gemini, LCEL / ReAct) |
 | `conversation.py` | Conversation history (Week 11) |
 | `security.py` | Input validation, injection defense, and data protection (Weeks 12 & 17) |
+| `compliance.py` | Metadata tagging and log redaction for sensitive data (Week 18) |
 | `monitoring.py` | Hallucination detection (Week 13) |
 | `filters.py` | Similarity filtering and fallbacks (Week 14) |
 | `workflow.py` | Query rewriting and multi-hop retrieval (Week 15) |
@@ -126,6 +130,70 @@ Set `RAG_MODE=react` in `.env` for the ReAct agent. See [LANGCHAIN.md](LANGCHAIN
 
 ---
 
+## Week 18 — Compliance (Metadata Tagging & Redaction)
+
+This section documents how the app handles sensitive data responsibly. This is **compliance-aware design**, not a SOC 2 certification.
+
+### Applicable trust principles (hypothetical use case)
+
+Our RAG app answers questions about public tech documentation. If deployed commercially, these SOC 2-style principles would apply:
+
+| Principle | Why it applies |
+|-----------|----------------|
+| **Security** | User queries reach an external LLM API and are embedded into a vector store. Access to API keys, session chat history, and ChromaDB must be protected. |
+| **Confidentiality** | Users might paste emails, account numbers, or API keys into chat even though the app is for tech Q&A. Those values must not appear in logs or debug output. |
+| **Privacy** | Personal identifiers (PII) and health-related text (PHI) should be blocked at input and never stored in analytics or error traces. |
+
+### Where sensitive data could appear
+
+| Location | Risk | Control |
+|----------|------|---------|
+| **User chat input** | PII, secrets, PHI pasted into the prompt | `security.py` blocks known patterns; `compliance.py` tags and redacts before logging |
+| **Knowledge-base documents** | Hypothetically could contain internal/confidential docs | Sample corpus is public educational text; ingest tags each chunk as `public` / `operational` |
+| **Retrieved vector chunks** | Could surface sensitive text if corpus were compromised | Each retrieved chunk re-tagged at retrieval time |
+| **Model output** | LLM might echo sensitive input | Output tagged; logs use redacted text only |
+| **Error messages** | Exceptions may include user text | `filters.handle_api_error()` redacts before display |
+| **Session state / chat UI** | Conversation stored in Streamlit session | User sees their own input; compliance metadata shown without raw log dumps |
+
+### Metadata tagging scheme
+
+Every tagged item carries three dimensions:
+
+| Field | Values | Purpose |
+|-------|--------|---------|
+| `sensitivity` | `public`, `internal`, `confidential`, `restricted` | Drives handling strictness |
+| `data_type` | `operational`, `pii`, `phi`, `financial`, `credential` | Describes content category |
+| `source` | `user_input`, `document`, `retrieved`, `model_output` | Shows pipeline boundary |
+
+Tags are attached in `compliance.py` and stored:
+
+- **Document ingest** — Chroma metadata on each chunk (`langchain_engine.py`)
+- **User input** — when a query passes validation (`rag_pipeline.py`)
+- **Retrieved chunks** — after similarity filtering (`rag_pipeline.py`)
+- **Model output** — before returning the answer (`rag_pipeline.py`)
+
+### Automated redaction
+
+Redaction masks emails, phone numbers, SSN-like patterns, API keys, and selected financial/PHI phrases with `[REDACTED]`.
+
+Redaction is applied at:
+
+1. **Compliance audit logs** — `log_compliance_event()` never writes raw sensitive text
+2. **Error / debug output** — `filters.handle_api_error()` and `redact_for_display()`
+3. **Input boundary** — `security.py` blocks sensitive user input before it reaches Gemini (fail-closed default)
+
+Set `ENABLE_COMPLIANCE_LOGGING=true` in `.env` to emit redacted audit events to the console.
+
+### Assumptions and limitations
+
+- Pattern matching is **not** full data-loss prevention; it catches common formats only.
+- The knowledge base is static sample text — no real customer or employee records.
+- Metadata classification is rule-based, not ML-based.
+- Streamlit session memory is in-process only; production would need encrypted persistence policies.
+- We document controls for learning purposes; formal SOC 2 audits require organizational process beyond code.
+
+---
+
 ## Weekly Progress
 
 Update this checklist as you complete each week's assignment.
@@ -139,6 +207,7 @@ Update this checklist as you complete each week's assignment.
 - [x] Week 15.5 — LangChain pipeline (optional)
 - [x] Week 16 — Created architecture diagram and explanation
 - [x] Week 17 — Prompting vs RAG vs fine-tuning (conceptual; data protection in `security.py`)
+- [x] Week 18 — Compliance metadata tagging and redaction (`compliance.py`)
 
 ---
 ## Assignment: Week 11 — Conversation Context

@@ -149,7 +149,7 @@ def multi_hop_retrieve(query, n_per_hop=2):
     seen_documents = set()
 
     for sub_query in sub_queries:
-        docs, _ = retrieve_with_scores(sub_query, k=n_per_hop)
+        docs, _, _ = retrieve_with_scores(sub_query, k=n_per_hop)
 
         for doc in docs:
             if doc not in seen_documents:

@@ -17,6 +17,7 @@
 # message explaining what happened. This is called "graceful degradation."
 
 from config import SIMILARITY_THRESHOLD
+from compliance import redact_for_display
 
 
 def filter_by_threshold(documents, distances, threshold=SIMILARITY_THRESHOLD):
@@ -116,5 +117,5 @@ def handle_api_error(error):
     else:
         return (
             "An unexpected error occurred while generating a response. "
-            f"Please try again. (Error: {str(error)[:100]})"
+            f"Please try again. (Error: {redact_for_display(str(error))[:100]})"
         )

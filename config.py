@@ -74,6 +74,9 @@ ENABLE_SENSITIVE_DATA_CHECKS = _env_bool("ENABLE_SENSITIVE_DATA_CHECKS", True)
 # Optional topic guardrails (medical advice requests, etc.).
 ENABLE_RESTRICTED_TOPIC_CHECKS = _env_bool("ENABLE_RESTRICTED_TOPIC_CHECKS", False)
 
+# Week 18 — log redacted compliance events (never logs raw sensitive text).
+ENABLE_COMPLIANCE_LOGGING = _env_bool("ENABLE_COMPLIANCE_LOGGING", True)
+
 # --- LangChain Pipeline ---
 # RAG_MODE: "chain" (retrieve + LCEL) or "react" (LangGraph agent with tools)
 RAG_MODE = os.getenv("RAG_MODE", "chain").strip().lower()
