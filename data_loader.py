@@ -124,6 +124,115 @@ SAMPLE_DOCUMENTS = [
     "Software testing is the practice of verifying that your code works correctly. Unit tests "
     "check individual functions in isolation. Integration tests check how components work "
     "together. Writing tests helps catch bugs early and makes code easier to change safely.",
+
+    # Python — fundamentals (expanded)
+    "Python variables are names that refer to values in memory. Python uses dynamic typing, "
+    "so you do not declare a type explicitly — the interpreter infers it at runtime. Common "
+    "built-in types include int (whole numbers), float (decimals), str (text), bool (True/False), "
+    "list, tuple, dict, and set. You can check a value's type with the built-in type() function.",
+
+    "Python functions are reusable blocks of code defined with the def keyword. Functions can "
+    "accept parameters and return values using the return statement. Parameters can have default "
+    "values, and functions can accept variable-length arguments with *args and **kwargs. "
+    "Well-named functions with a single clear purpose make Python code easier to read and test.",
+
+    "pip is Python's standard package installer. It downloads libraries from the Python Package "
+    "Index (PyPI) and installs them into your active environment. Common commands include "
+    "pip install package-name, pip list to see installed packages, and pip freeze to export "
+    "dependencies for a requirements.txt file. Always use a virtual environment so project "
+    "dependencies stay isolated from other projects on your machine.",
+
+    "Object-oriented programming (OOP) in Python uses classes to bundle data (attributes) and "
+    "behavior (methods) together. A class is a blueprint; an instance is a concrete object "
+    "created from that class. Core OOP concepts include encapsulation (hiding internal details), "
+    "inheritance (reusing behavior from a parent class), and polymorphism (different classes "
+    "responding to the same method name in their own way).",
+
+    # Machine Learning — expanded
+    "Unsupervised learning finds patterns in data that has no labels. The algorithm explores "
+    "structure on its own rather than learning input-output pairs. Common tasks include "
+    "clustering (grouping similar records, such as customer segments) and dimensionality "
+    "reduction (compressing many features into fewer while preserving important variation). "
+    "K-means clustering and Principal Component Analysis (PCA) are widely used techniques.",
+
+    "Reinforcement learning trains an agent to make sequential decisions in an environment. "
+    "The agent takes actions, receives rewards or penalties, and learns a policy that maximizes "
+    "long-term reward. Unlike supervised learning, there are no fixed correct labels for every "
+    "step — the agent discovers good strategies through trial and error. Applications include "
+    "game playing, robotics, and recommendation systems that adapt over time.",
+
+    "Machine learning models are evaluated by splitting data into training, validation, and test "
+    "sets. The training set teaches the model; the validation set tunes hyperparameters and "
+    "detects overfitting; the test set gives an unbiased final score. Overfitting happens when "
+    "a model memorizes training noise instead of learning general patterns, performing well on "
+    "training data but poorly on new data. Regularization and more training data help reduce it.",
+
+    "Classification predicts a category (spam vs not spam, cat vs dog), while regression predicts "
+    "a continuous number (house price, temperature). Common classification metrics include accuracy, "
+    "precision, recall, and F1 score. Regression models are often evaluated with mean absolute error "
+    "(MAE) or root mean squared error (RMSE). Choosing the right metric depends on the business cost "
+    "of false positives versus false negatives.",
+
+    # Databases — expanded
+    "SQL is the standard language for querying relational databases. SELECT retrieves columns from "
+    "a table; WHERE filters rows by a condition; JOIN combines rows from related tables using keys. "
+    "For example, SELECT name, email FROM users WHERE active = true returns active user records. "
+    "Primary keys uniquely identify rows; foreign keys link tables together and enforce relationships.",
+
+    "Database indexing speeds up lookups by maintaining a sorted structure (often a B-tree) for "
+    "one or more columns. Without an index, the database may scan every row (a full table scan). "
+    "Indexes help WHERE clauses and JOINs run faster but add storage overhead and slow down writes "
+    "slightly because the index must be updated on INSERT and UPDATE. Index columns you filter or "
+    "sort on frequently in production queries.",
+
+    "ACID is a set of properties that make database transactions reliable: Atomicity (all steps "
+    "succeed or all roll back), Consistency (rules and constraints stay valid), Isolation "
+    "(concurrent transactions do not corrupt each other), and Durability (committed data survives "
+    "crashes). Relational databases like PostgreSQL and MySQL provide ACID guarantees, which "
+    "matters for financial records, inventory, and any system where partial updates are unacceptable.",
+
+    # APIs — expanded
+    "HTTP status codes tell clients whether an API request succeeded or failed. 200 means OK; "
+    "201 means created; 400 means bad request (client error); 401 means unauthorized; 403 means "
+    "forbidden; 404 means not found; 429 means rate limited; 500 means internal server error. "
+    "APIs typically return JSON bodies with error messages alongside these codes so clients can "
+    "handle failures gracefully.",
+
+    "API authentication protects endpoints from unauthorized access. Common approaches include "
+    "API keys (a secret string sent in a header), OAuth 2.0 (delegated access without sharing "
+    "passwords), and JWT bearer tokens (signed tokens that encode identity and expiry). Never "
+    "commit API keys to source control — store them in environment variables or a secrets manager "
+    "and rotate keys if they are exposed.",
+
+    "Rate limiting restricts how many API requests a client can make in a time window. It protects "
+    "services from abuse, controls cost, and ensures fair usage across users. When limits are "
+    "exceeded, servers often return HTTP 429 with a Retry-After header. Client code should "
+    "implement exponential backoff — wait longer between each retry — rather than hammering the "
+    "API immediately after a rate-limit error.",
+
+    # AI concepts — expanded
+    "Prompt engineering is the practice of writing clear instructions so an LLM produces useful "
+    "output. Effective prompts specify the task, desired format, constraints, and examples when "
+    "needed (few-shot prompting). Chain-of-thought prompting asks the model to explain its "
+    "reasoning step by step, which often improves accuracy on complex questions. Prompting changes "
+    "runtime behavior without retraining the model.",
+
+    "Fine-tuning adapts a pre-trained model to a specific task by training on additional examples. "
+    "It changes model weights and is best for consistent tone, classification, or domain-specific "
+    "language patterns. RAG retrieves external documents at query time and does not retrain the "
+    "model — it is better for factual, changing knowledge. Most production systems combine "
+    "prompting and RAG; fine-tuning is added only when prompts alone cannot enforce the behavior.",
+
+    "Embeddings map text into dense numerical vectors so meaning can be compared mathematically. "
+    "Similar concepts have vectors that are close together in vector space. Cosine similarity and "
+    "Euclidean (L2) distance are common ways to compare embeddings. In RAG, query and document "
+    "embeddings power semantic search — finding relevant passages even when exact keywords differ.",
+
+    "Generative AI models produce new content — text, code, or images — rather than only "
+    "classifying input. Large language models (LLMs) predict the next token in a sequence, "
+    "which enables fluent answers, summaries, and code generation. Tokens are the model's units "
+    "of text (roughly word fragments); API pricing and context limits are often measured in tokens. "
+    "Longer prompts and retrieved context consume more tokens and increase latency and cost.",
 ]
 
 

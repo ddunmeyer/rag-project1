@@ -68,15 +68,26 @@ def get_vectorstore() -> Chroma:
 
 
 def initialize_vector_store() -> int:
-    """Load documents into Chroma on first run; reuse persisted vectors after."""
-    vectorstore = get_vectorstore()
-    count = vectorstore._collection.count()
-    if count > 0:
-        return count
+    """Load documents into Chroma; rebuild if the source document set changed."""
+    global _react_agent
 
-    documents = [Document(page_content=text) for text in get_documents()]
-    vectorstore.add_documents(documents)
-    return len(documents)
+    documents = get_documents()
+    expected_count = len(documents)
+    vectorstore = get_vectorstore()
+    current_count = vectorstore._collection.count()
+
+    if current_count == expected_count:
+        return current_count
+
+    if current_count > 0:
+        existing = vectorstore._collection.get()
+        ids = existing.get("ids") or []
+        if ids:
+            vectorstore._collection.delete(ids=ids)
+        _react_agent = None
+
+    vectorstore.add_documents([Document(page_content=text) for text in documents])
+    return expected_count
 
 
 def retrieve_with_scores(query: str, k: int = TOP_K_RESULTS) -> tuple[list[str], list[float]]:
