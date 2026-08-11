@@ -1,6 +1,6 @@
 # RAG Learning App
 
-A Retrieval-Augmented Generation (RAG) application built with Python, ChromaDB, SentenceTransformers, and Google Gemini. You'll build this incrementally over Weeks 10–15.
+A Retrieval-Augmented Generation (RAG) application built with Python, ChromaDB, SentenceTransformers, and Google Gemini. You'll build this incrementally over Weeks 10–17.
 
 ## What This App Does
 
@@ -130,47 +130,15 @@ Set `RAG_MODE=react` in `.env` for the ReAct agent. See [LANGCHAIN.md](LANGCHAIN
 
 Update this checklist as you complete each week's assignment.
 
-- [ ] Week 10 — Ran the starter app and explored the codebase
+- [x] Week 10 — Ran the starter app and explored the codebase
 - [x] Week 11 — Implemented conversation context
 - [x] Week 12 — Implemented input security
 - [x] Week 13 — Implemented hallucination monitoring
 - [x] Week 14 — Implemented filtering and fallbacks
 - [x] Week 15 — Implemented multi-step AI workflows
+- [x] Week 15.5 — LangChain pipeline (optional)
 - [x] Week 16 — Created architecture diagram and explanation
-
----
-
----
-## Assignment: Week 10 — Run the Starter App
-
-**Learning objective:** Understand how a basic RAG pipeline works end-to-end.
-
-### Background
-
-RAG (Retrieval-Augmented Generation) connects a vector database to an LLM. Instead of asking the LLM to answer from memory (which leads to hallucination), we first *retrieve* relevant documents from our knowledge base, then *augment* the LLM's prompt with those documents so it can generate a *grounded* answer.
-
-This week, everything is already built. Your job is to run it, understand how the pieces fit together, and answer the reflection questions below.
-
-### What to do
-
-1. Follow the Setup instructions above and get the app running
-2. Ask the app at least 3 questions — try both on-topic and off-topic questions
-3. Read through these four files and make sure you understand what each one does:
-   - `data_loader.py` — where does the knowledge base come from?
-   - `embeddings.py` — what does `embed_text()` return, and why?
-   - `vector_store.py` — what does ChromaDB store, and how does `query_similar()` work?
-   - `rag_pipeline.py` — trace a question from `run_rag()` all the way to a returned answer
-
-### Reflection questions (be ready to discuss in class)
-
-- What would happen if you asked a question that no document in the knowledge base covers?
-- Why do we store vector embeddings instead of just the original text?
-- What is the difference between keyword search and semantic search?
-
-### ✅ When done
-Check off **Week 10** in the Weekly Progress section above, then delete this entire Week 10 assignment section (from `## Assignment: Week 10` down to the next `---`).
-
----
+- [x] Week 17 — Prompting vs RAG vs fine-tuning (conceptual; data protection in `security.py`)
 
 ---
 ## Assignment: Week 11 — Conversation Context
