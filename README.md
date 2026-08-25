@@ -1,6 +1,6 @@
 # RAG Learning App
 
-A Retrieval-Augmented Generation (RAG) application built with Python, ChromaDB, SentenceTransformers, and Google Gemini. You'll build this incrementally over Weeks 10–18.
+A Retrieval-Augmented Generation (RAG) application built with Python, ChromaDB, SentenceTransformers, and Google Gemini. You'll build this incrementally over Weeks 10–19.
 
 ## What This App Does
 
@@ -103,6 +103,8 @@ The app opens in your browser at `http://localhost:8501`.
 | `conversation.py` | Conversation history (Week 11) |
 | `security.py` | Input validation, injection defense, and data protection (Weeks 12 & 17) |
 | `compliance.py` | Metadata tagging and log redaction for sensitive data (Week 18) |
+| `tests/` | Automated unit and safety tests (Week 19) |
+| `.github/workflows/tests.yml` | GitHub Actions CI — runs pytest on push/PR (Week 19) |
 | `monitoring.py` | Hallucination detection (Week 13) |
 | `filters.py` | Similarity filtering and fallbacks (Week 14) |
 | `workflow.py` | Query rewriting and multi-hop retrieval (Week 15) |
@@ -194,6 +196,42 @@ Set `ENABLE_COMPLIANCE_LOGGING=true` in `.env` to emit redacted audit events to 
 
 ---
 
+## Week 19 — Testing & CI/CD
+
+### What is tested
+
+| Test file | Covers |
+|-----------|--------|
+| `tests/test_basic.py` | Redaction, metadata tagging, input validation, filters, conversation formatting |
+| `tests/test_safety.py` | PII/injection blocking in `run_rag()`, redacted error messages |
+
+These tests run **without live Gemini API calls** — safety checks fail fast before the LLM is invoked.
+
+### Why these tests matter
+
+- **Redaction/compliance** — ensures emails and API-key patterns never appear in logs or error output
+- **Input security** — confirms injection and PII blocking still work after refactors
+- **Filters & conversation** — guards core RAG helper behavior used every query
+
+### What is intentionally not tested
+
+- Live Gemini generation (requires API key, costs quota, non-deterministic)
+- Streamlit UI rendering (manual testing via `streamlit run app.py`)
+- Full vector-store embedding quality (slow; depends on downloaded models)
+
+### Run tests locally
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+### Continuous integration
+
+GitHub Actions workflow `.github/workflows/tests.yml` runs `pytest` on every push and pull request.
+
+---
+
 ## Weekly Progress
 
 Update this checklist as you complete each week's assignment.
@@ -208,46 +246,6 @@ Update this checklist as you complete each week's assignment.
 - [x] Week 16 — Created architecture diagram and explanation
 - [x] Week 17 — Prompting vs RAG vs fine-tuning (conceptual; data protection in `security.py`)
 - [x] Week 18 — Compliance metadata tagging and redaction (`compliance.py`)
-
----
-## Assignment: Week 11 — Conversation Context
-
-**Learning objective:** Understand how to give an LLM memory using in-context history.
-
-### Background
-
-LLMs have no memory between API calls. Every call starts completely fresh. This means if you ask "What is Python?" and then "Can you give an example?", the second call has no idea what "it" refers to.
-
-The solution used in every production chatbot is simple: before each API call, paste the recent conversation history directly into the prompt. The LLM "remembers" because *we tell it* what was said before. This is called **in-context memory**.
-
-### What to implement
-
-**File 1 — `conversation.py`**
-
-Implement `get_formatted_history()`. This method formats the stored messages as a plain-text block that can be pasted into a prompt. Read the TODO comment carefully — the format matters.
-
-**File 2 — `rag_pipeline.py`**
-
-Find the **Week 11 TODO** block inside `generate_answer()`. Replace the placeholder `history_section = ""` with logic that:
-1. Checks if `conversation_history` is not None and has messages
-2. Gets the formatted history with `conversation_history.get_formatted_history()`
-3. Sets `history_section` to `f"\nPrevious conversation:\n{history_text}\n"`
-
-Then find the second **Week 11 TODO** block (at the bottom of `run_rag()`). After the answer is generated, save the exchange:
-```python
-conversation_history.add_message("user", query)
-conversation_history.add_message("assistant", answer)
-```
-
-### How to test
-
-Run the app and try a two-part conversation:
-1. Ask: *"What is machine learning?"*
-2. Ask: *"What are some real-world examples of it?"*
-
-Without your implementation, the second answer will be generic. With it, the answer will reference machine learning specifically.
-
-### ✅ When done
-Check off **Week 11** in the Weekly Progress section above, then delete this entire Week 11 assignment section.
+- [x] Week 19 — Automated tests and GitHub Actions CI (`tests/`, `.github/workflows/tests.yml`)
 
 ---

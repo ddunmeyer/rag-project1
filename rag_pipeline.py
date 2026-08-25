@@ -262,6 +262,12 @@ def get_feature_status():
         and "[REDACTED]" in redact_for_log("contact test@example.com")
     )
 
+    from pathlib import Path
+
+    week19 = Path("tests/test_basic.py").exists() and Path(
+        ".github/workflows/tests.yml"
+    ).exists()
+
     return {
         "Week 11 — Conversation context": week11,
         "Week 12 — Input security": week12,
@@ -271,4 +277,5 @@ def get_feature_status():
         "Week 15.5 — LangChain pipeline": langchain_ready,
         "Week 17 — Data protection": week17,
         "Week 18 — Compliance tagging & redaction": week18,
+        "Week 19 — Tests & CI/CD": week19,
     }
