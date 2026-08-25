@@ -26,6 +26,14 @@ from langchain_engine import (
 )
 from monitoring import calculate_confidence, check_hallucination
 from security import sanitize_input, validate_input
+from compliance import (
+    log_compliance_event,
+    metadata_summary,
+    redact_for_display,
+    tag_model_output,
+    tag_retrieved_chunk,
+    tag_user_input,
+)
 from workflow import rewrite_query
 
 _VAGUE_REFERENCE = re.compile(
@@ -72,7 +80,7 @@ def _needs_query_rewrite(query, conversation_history):
     return bool(_VAGUE_REFERENCE.search(query))
 
 
-def _error_result(message: str) -> dict:
+def _error_result(message: str, *, compliance: dict | None = None) -> dict:
     return {
         "answer": message,
         "sources": [],
@@ -80,6 +88,7 @@ def _error_result(message: str) -> dict:
         "confidence": 0.0,
         "grounding": {},
         "error": message,
+        "compliance": compliance or {},
     }
 
 
@@ -96,8 +105,27 @@ def _prepare_retrieval_query(query, conversation_history):
 
 
 def _retrieve_filtered(search_query):
-    documents, distances = retrieve_with_scores(search_query)
-    return filter_by_threshold(documents, distances, SIMILARITY_THRESHOLD)
+    documents, distances, stored_metadatas = retrieve_with_scores(search_query)
+    filtered_docs, filtered_distances = filter_by_threshold(
+        documents, distances, SIMILARITY_THRESHOLD
+    )
+    retrieval_tags = []
+    source_metadatas = []
+    rank = 0
+    for doc, distance, stored in zip(documents, distances, stored_metadatas):
+        if distance <= SIMILARITY_THRESHOLD:
+            rank += 1
+            tag = tag_retrieved_chunk(doc, rank=rank)
+            if stored:
+                tag.tags.extend(
+                    f"stored:{key}={value}"
+                    for key, value in stored.items()
+                    if key != "compliance_version"
+                )
+            retrieval_tags.append(tag)
+            source_metadatas.append(tag.to_dict())
+
+    return filtered_docs, filtered_distances, retrieval_tags, source_metadatas
 
 
 def run_rag(query, conversation_history=None):
@@ -114,18 +142,27 @@ def run_rag(query, conversation_history=None):
         check_restricted_topics=ENABLE_RESTRICTED_TOPIC_CHECKS,
     )
     if not is_valid:
+        log_compliance_event("input_blocked", query)
         return _error_result(error_message)
 
     query = sanitize_input(query)
+    input_metadata = tag_user_input(query)
+    log_compliance_event("user_input_received", query, input_metadata)
+
     search_query = _prepare_retrieval_query(query, conversation_history)
 
     try:
         if RAG_MODE == "react":
             answer = run_react_answer(query, conversation_history)
-            documents, distances = _retrieve_filtered(search_query)
+            documents, distances, retrieval_tags, source_metadatas = _retrieve_filtered(
+                search_query
+            )
         else:
-            documents, distances = _retrieve_filtered(search_query)
+            documents, distances, retrieval_tags, source_metadatas = _retrieve_filtered(
+                search_query
+            )
             if not has_relevant_results(documents):
+                log_compliance_event("retrieval_fallback", search_query, input_metadata)
                 return {
                     "answer": get_fallback_response(),
                     "sources": [],
@@ -133,7 +170,16 @@ def run_rag(query, conversation_history=None):
                     "confidence": 0.0,
                     "grounding": {"verdict": "N/A", "is_grounded": True, "warning": ""},
                     "error": "",
+                    "compliance": {
+                        "input": input_metadata.to_dict(),
+                        "retrieved": metadata_summary([]),
+                    },
                 }
+            log_compliance_event(
+                "documents_retrieved",
+                f"{len(documents)} chunks",
+                tag_retrieved_chunk(documents[0], rank=1) if documents else None,
+            )
             answer = generate_answer(
                 query,
                 documents,
@@ -141,7 +187,12 @@ def run_rag(query, conversation_history=None):
                 resolve_question=_resolve_question,
             )
     except Exception as error:
-        return _error_result(handle_api_error(error))
+        safe_error = redact_for_display(str(error))
+        log_compliance_event("pipeline_error", safe_error, input_metadata)
+        return _error_result(handle_api_error(error), compliance={"input": input_metadata.to_dict()})
+
+    output_metadata = tag_model_output(answer)
+    log_compliance_event("model_output", answer, output_metadata)
 
     confidence = calculate_confidence(distances) if documents else 0.0
     if ENABLE_HALLUCINATION_CHECK and documents:
@@ -160,6 +211,12 @@ def run_rag(query, conversation_history=None):
         "confidence": confidence,
         "grounding": grounding,
         "error": "",
+        "compliance": {
+            "input": input_metadata.to_dict(),
+            "retrieved": metadata_summary(retrieval_tags),
+            "output": output_metadata.to_dict(),
+            "source_metadatas": source_metadatas,
+        },
     }
 
 
@@ -197,6 +254,20 @@ def get_feature_status():
     except Exception:
         langchain_ready = False
 
+    from compliance import classify_text, redact_for_log, DataSource, Sensitivity
+
+    sample_meta = classify_text("hello", DataSource.USER_INPUT)
+    week18 = (
+        sample_meta.sensitivity == Sensitivity.PUBLIC
+        and "[REDACTED]" in redact_for_log("contact test@example.com")
+    )
+
+    from pathlib import Path
+
+    week19 = Path("tests/test_basic.py").exists() and Path(
+        ".github/workflows/tests.yml"
+    ).exists()
+
     return {
         "Week 11 — Conversation context": week11,
         "Week 12 — Input security": week12,
@@ -205,4 +276,6 @@ def get_feature_status():
         "Week 15 — Query rewriting": week15,
         "Week 15.5 — LangChain pipeline": langchain_ready,
         "Week 17 — Data protection": week17,
+        "Week 18 — Compliance tagging & redaction": week18,
+        "Week 19 — Tests & CI/CD": week19,
     }

@@ -30,6 +30,7 @@ from config import (
     TEMPERATURE,
     TOP_K_RESULTS,
 )
+from compliance import COMPLIANCE_VERSION, tag_document
 from data_loader import get_documents
 
 _vectorstore: Chroma | None = None
@@ -68,23 +69,48 @@ def get_vectorstore() -> Chroma:
 
 
 def initialize_vector_store() -> int:
-    """Load documents into Chroma on first run; reuse persisted vectors after."""
+    """Load documents into Chroma; rebuild if the source document set changed."""
+    global _react_agent
+
+    documents = get_documents()
+    expected_count = len(documents)
     vectorstore = get_vectorstore()
-    count = vectorstore._collection.count()
-    if count > 0:
-        return count
+    current_count = vectorstore._collection.count()
 
-    documents = [Document(page_content=text) for text in get_documents()]
-    vectorstore.add_documents(documents)
-    return len(documents)
+    if current_count == expected_count:
+        sample = vectorstore._collection.get(limit=1, include=["metadatas"])
+        metas = sample.get("metadatas") or []
+        if (
+            metas
+            and metas[0]
+            and metas[0].get("compliance_version") == COMPLIANCE_VERSION
+        ):
+            return current_count
+
+    if current_count > 0:
+        existing = vectorstore._collection.get()
+        ids = existing.get("ids") or []
+        if ids:
+            vectorstore._collection.delete(ids=ids)
+        _react_agent = None
+
+    langchain_docs = [
+        Document(page_content=text, metadata=tag_document(text, index))
+        for index, text in enumerate(documents)
+    ]
+    vectorstore.add_documents(langchain_docs)
+    return expected_count
 
 
-def retrieve_with_scores(query: str, k: int = TOP_K_RESULTS) -> tuple[list[str], list[float]]:
-    """Semantic search with L2 distance scores for filtering and confidence."""
+def retrieve_with_scores(
+    query: str, k: int = TOP_K_RESULTS
+) -> tuple[list[str], list[float], list[dict]]:
+    """Semantic search with L2 distance scores and compliance metadata."""
     results = get_vectorstore().similarity_search_with_score(query, k=k)
     documents = [doc.page_content for doc, _ in results]
     distances = [float(distance) for _, distance in results]
-    return documents, distances
+    metadatas = [doc.metadata or {} for doc, _ in results]
+    return documents, distances, metadatas
 
 
 def invoke_llm_text(prompt: str, *, temperature: float = TEMPERATURE) -> str:
@@ -177,7 +203,7 @@ def get_react_agent():
     @tool
     def search_knowledge_base(query: str) -> str:
         """Search the tech docs knowledge base for facts about Python, ML, RAG, and AI."""
-        docs, _ = retrieve_with_scores(query)
+        docs, _, _ = retrieve_with_scores(query)
         if not docs:
             return "No relevant documents found."
         return "\n\n".join(docs)
